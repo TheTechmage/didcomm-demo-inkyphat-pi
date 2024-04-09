@@ -1,0 +1,22 @@
+[project]
+name = "didcomm-v2-tester"
+version = "0.1.0"
+description = "Meep"
+authors = [
+    {name = "Colton Wolkins (Indicio work address)", email = "colton@indicio.tech"},
+]
+dependencies = [
+    "didcomm-messaging[askar,did-peer]>=0.1.0",
+    "aiohttp>=3.9.3",
+    "aries-askar @ file:///${PROJECT_ROOT}/aries_askar-0.3.2-py3-none-linux_armv6l.whl",
+    "websockets>=12.0",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "Apache2"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]

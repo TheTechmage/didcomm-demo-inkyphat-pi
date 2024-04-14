@@ -341,6 +341,7 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", 9000)
     await site.start()
 
+    await quickstart.fetch_relayed_messages(DMP, did, RELAY_DID, print_msg)
     while True:
         await asyncio.sleep(5)
         #if mediator_websocket_proc and mediator_websocket_proc.done():
@@ -352,7 +353,6 @@ async def main():
                 pass
             mediator_websocket_proc = await activate_websocket()
 
-    #await quickstart.fetch_relayed_messages(DMP, did, RELAY_DID, print_msg)
 
 loop = asyncio.get_event_loop()
 tasks = [loop.create_task(main())]

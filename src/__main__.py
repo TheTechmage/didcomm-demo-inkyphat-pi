@@ -212,33 +212,52 @@ async def main():
                 await quickstart.send_http_message(DMP, relayed_did, message, target=target_did)
         if msg["type"] == "https://didcomm.org/basicmessage/2.0/message":
             pass
-        if msg["type"] == "https://didcomm.org/basicmessage/2.0/message":
-            COOLDOWN_AMOUNT = 10.0
-            MAX_LENGTH = 16
-            new_name = msg["body"]["content"]
+        if msg["type"] == "https://colton.wolkins.net/dev/name-tag/2.0/set-name":
+            COOLDOWN_AMOUNT = 30.0  # Give enough time for the nametag to update
+            MAX_LENGTH = 116
+            new_name = msg["body"]["name"]
             response = ""
             valid_chars =  re.compile(r"^[a-zA-Z0-9 !#\*/\\_-]+$");
+
+            async def send_status_report(status, message, name):
+                message = {
+                    "type": "https://colton.wolkins.net/dev/name-tag/2.0/status",
+                    "id": str(uuid.uuid4()),
+                    "body": {
+                        "status": status,
+                        "description": message,
+                        "new-name": name,
+                    },
+                    "from": relayed_did,
+                    "to": [target_did],
+                }
+                await quickstart.send_http_message(DMP, relayed_did, message, target=target_did)
+            async def send_problem_report(code, message):
+                message = {
+                    "type": "https://didcomm.org/report-problem/2.0/problem-report",
+                    "id": str(uuid.uuid4()),
+                    "pthid": msg["id"],
+                    "body": {
+                        "code": code,
+                        "comment": message
+                    },
+                    "from": relayed_did,
+                    "to": [target_did],
+                }
+                await quickstart.send_http_message(DMP, relayed_did, message, target=target_did)
+
             if len(new_name) > MAX_LENGTH:
-                response = "Name too long, pick a shorter name"
+                await send_problem_report("e.m.msg.name-too-long", "Name too long, pick a shorter name")
             elif last_executed + COOLDOWN_AMOUNT > time.time():
-                #print("Cooldown", last_executed, COOLDOWN_AMOUNT, time.time())
-                response = "Nametag Cooldown in effect, please try again in a few minutes"
+                await send_problem_report("e.m.req.time.cooldown", f"Nametag Cooldown in effect, please try again in a few minutes. {(last_executed + COOLDOWN_AMOUNT) - time.time()} seconds remaining")
             elif not valid_chars.match(new_name):
-                response = "Invalid characters detected, try roman characters"
+                await send_problem_report("e.m.msg.invalid-characters", "Invalid characters detected, try characters from the English alphabet")
             else:
                 last_executed = time.time()
-                response = f"Setting name tag to: {new_name}"
+                await send_status_report("pending", "Setting name tag to", new_name)
                 subprocess.run(["env", "-i", "sudo", "python3", "/home/pi/Pimoroni/inky/examples/name-badge.py", "--name", new_name])
-            message = {
-                "type": "https://didcomm.org/basicmessage/2.0/message",
-                "id": str(uuid.uuid4()),
-                "body": {
-                    "content": response
-                },
-                "from": relayed_did,
-                "to": [target_did],
-            }
-            await quickstart.send_http_message(DMP, relayed_did, message, target=target_did)
+                last_executed = time.time()
+                await send_status_report("changing", "Name tag to", new_name)
         print("Received Message: ", msg["body"])
 
     mediator_websocket = None

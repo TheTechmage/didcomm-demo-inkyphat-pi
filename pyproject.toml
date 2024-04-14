@@ -1,7 +1,7 @@
 [project]
-name = "didcomm-v2-tester"
+name = "didcomm-demo-inkyphat-pi"
 version = "0.1.0"
-description = "Meep"
+description = "A demo of using DIDComm on a Raspberry Pi connected to an inkyphat e-ink display."
 authors = [
     {name = "Colton Wolkins (Indicio work address)", email = "colton@indicio.tech"},
 ]
